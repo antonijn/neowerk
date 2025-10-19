@@ -1,0 +1,17 @@
+build/
+*.o
+*.obj
+a.out
+
+# profiler output
+*.prof
+
+# vim temp files
+.*.swp
+.*.swo
+
+# clang JSON compilation database file
+compile_commands.json
+
+# clangd
+.cache/
