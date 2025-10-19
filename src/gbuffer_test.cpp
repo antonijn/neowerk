@@ -17,10 +17,12 @@
 #include "gbuffer.hpp"
 
 #include <algorithm>
+#include <bits/ranges_util.h>
 #include <functional>
 
 #include <gtest/gtest.h>
 
+using namespace std::literals::string_view_literals;
 using namespace werk;
 
 namespace {
@@ -32,81 +34,83 @@ TEST(GBufferTest, DefaultConstructor) {
 
 TEST(GBufferTest, CopyConstructor) {
 	auto gbuf = gbuffer{};
-	gbuf.insert(u8"copy me");
+	gbuf.insert(u8"copy me"sv);
 	auto copy = gbuf;
 	EXPECT_EQ(gbuf.size(), copy.size());
-	EXPECT_TRUE(std::equal(gbuf.begin(), gbuf.end(), copy.begin()));
+	EXPECT_TRUE(std::ranges::equal(gbuf, copy));
 }
 
 TEST(GBufferTest, Initialization) {
 	auto gbuf = gbuffer{};
-	gbuf.insert(u8"hello, world");
-	EXPECT_TRUE(std::equal(gbuf.begin(), gbuf.end(), u8"hello, world"));
+	gbuf.insert(u8"hello, world"sv);
+	EXPECT_TRUE(std::ranges::equal(gbuf, u8"hello, world"sv));
 }
 
 TEST(GBufferTest, PrependAppend) {
 	auto gbuf = gbuffer{};
-	gbuf.insert(u8"two,");
+	gbuf.insert(u8"two,"sv);
 	gbuf.place_gap(gbuf.begin());
-	gbuf.insert(u8"one,");
+	gbuf.insert(u8"one,"sv);
 	gbuf.place_gap(gbuf.end());
-	gbuf.insert(u8"three");
-	EXPECT_TRUE(std::equal(gbuf.begin(), gbuf.end(), u8"one,two,three"));
+	gbuf.insert(u8"three"sv);
+	EXPECT_TRUE(std::ranges::equal(gbuf, u8"one,two,three"sv));
 }
 
 TEST(GBufferTest, EraseBack) {
 	auto gbuf = gbuffer{};
-	gbuf.insert(u8"erase this");
+	gbuf.insert(u8"erase this"sv);
 	gbuf.erase_back(5);
-	EXPECT_TRUE(std::equal(gbuf.begin(), gbuf.end(), u8"erase"));
+	EXPECT_TRUE(std::ranges::equal(gbuf, u8"erase"sv));
 }
 
 TEST(GBufferTest, EraseForward) {
 	auto gbuf = gbuffer{};
-	gbuf.insert(u8"erase this, please");
+	gbuf.insert(u8"erase this, please"sv);
 	gbuf.place_gap(gbuf.end() - 13);
 	gbuf.erase_forward(5);
-	EXPECT_TRUE(std::equal(gbuf.begin(), gbuf.end(), u8"erase, please"));
+	EXPECT_TRUE(std::ranges::equal(gbuf, u8"erase, please"sv));
 }
 
 TEST(GBufferTest, OverEraseBack) {
 	auto gbuf = gbuffer{};
-	gbuf.insert(u8"XXXtest");
+	gbuf.insert(u8"XXXtest"sv);
 	gbuf.place_gap(gbuf.begin() + 3);
 	gbuf.erase_back(10);
-	EXPECT_TRUE(std::equal(gbuf.begin(), gbuf.end(), u8"test"));
+	EXPECT_TRUE(std::ranges::equal(gbuf, u8"test"sv));
 }
 
 TEST(GBufferTest, OverEraseForward) {
 	auto gbuf = gbuffer{};
-	gbuf.insert(u8"testXXX");
+	gbuf.insert(u8"testXXX"sv);
 	gbuf.place_gap(gbuf.end() - 3);
 	gbuf.erase_forward(10);
-	EXPECT_TRUE(std::equal(gbuf.begin(), gbuf.end(), u8"test"));
+	EXPECT_TRUE(std::ranges::equal(gbuf, u8"test"sv));
 }
 
 TEST(GBufferTest, EraseRange) {
 	auto gbuf = gbuffer{};
-	gbuf.insert(u8"testXXXtest");
+	gbuf.insert(u8"testXXXtest"sv);
 	gbuf.place_gap(gbuf.begin() + 5);
 	gbuf.erase(gbuf.begin() + 4, gbuf.begin() + 7);
-	EXPECT_TRUE(std::equal(gbuf.begin(), gbuf.end(), u8"testtest"));
-	gbuf.insert(u8"YYY");
-	EXPECT_TRUE(std::equal(gbuf.begin(), gbuf.end(), u8"testYYYtest"));
+	EXPECT_TRUE(std::ranges::equal(gbuf, u8"testtest"sv));
+	gbuf.insert(u8"YYY"sv);
+	EXPECT_TRUE(std::ranges::equal(gbuf, u8"testYYYtest"sv));
 	gbuf.place_gap(gbuf.begin());
-	gbuf.erase(gbuf.begin() + 4, gbuf.end());
-	EXPECT_TRUE(std::equal(gbuf.begin(), gbuf.end(), u8"testY"));
+	gbuf.erase(gbuf.begin() + 5, gbuf.end());
+	EXPECT_TRUE(std::ranges::equal(gbuf, u8"testY"sv));
 	EXPECT_EQ(gbuf.gap(), gbuf.end());
 }
 
 TEST(GBufferTest, GapIsZero) {
 	auto gbuf = gbuffer{};
-	gbuf.insert(u8"gap_mustXXXbe_zeroXXX");
+	gbuf.insert(u8"gap_mustXXXbe_zeroXXX"sv);
 	gbuf.erase_back(3);
 	gbuf.place_gap(gbuf.gap() - 7);
 	gbuf.erase_back(3);
-	EXPECT_TRUE(std::equal(gbuf.begin(), gbuf.gap(), u8"gap_must"));
-	EXPECT_TRUE(std::equal(gbuf.gap(), gbuf.end(), u8"be_zero"));
+	auto before_gap = std::ranges::subrange{gbuf.begin(), gbuf.gap()};
+	EXPECT_TRUE(std::ranges::equal(before_gap, u8"gap_must"sv));
+	auto after_gap = std::ranges::subrange{gbuf.gap(), gbuf.end()};
+	EXPECT_TRUE(std::ranges::equal(after_gap, u8"be_zero"sv));
 	auto data = gbuf.data();
 	auto gap_ofs = gbuf.gap() - gbuf.begin();
 	auto gap_size = gbuf.capacity() - (gbuf.end() - gbuf.begin());
@@ -115,9 +119,9 @@ TEST(GBufferTest, GapIsZero) {
 
 TEST(GBufferTest, Mutable) {
 	auto gbuf = gbuffer{};
-	gbuf.insert(u8"uppercase");
-	std::for_each(gbuf.begin(), gbuf.end(), [](auto& x){ x = std::toupper(x); });
-	EXPECT_TRUE(std::equal(gbuf.gap(), gbuf.end(), u8"UPPERCASE"));
+	gbuf.insert(u8"uppercase"sv);
+	std::ranges::for_each(gbuf, [](auto& x){ x = std::toupper(x); });
+	EXPECT_TRUE(std::ranges::equal(gbuf, u8"UPPERCASE"sv));
 }
 
 }

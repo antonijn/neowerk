@@ -41,7 +41,7 @@ void gbuffer::insert(std::u8string_view sv)
 {
 	auto rem_cap = gap_end - gap_begin;
 	accommodate(sv.size());
-	std::copy(sv.begin(), sv.end(), writable_gap().begin());
+	std::ranges::copy(sv, writable_gap().begin());
 	gap_begin += sv.size();
 }
 
