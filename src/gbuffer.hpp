@@ -21,9 +21,18 @@ public:
 		TG *gbuf;
 		std::ptrdiff_t gap_rel_pos;
 	public:
+		using basic_gbuffer = std::remove_cv_t<TG>;
+
+		friend class basic_cursor<const basic_gbuffer, const char8_t>;
+
 		basic_cursor() = default;
 		basic_cursor(TG& gbuf_, std::ptrdiff_t pos)
 			: gbuf(&gbuf_), gap_rel_pos(pos)
+		{
+		}
+		// Allow conversion from iterator -> const_iterator
+		basic_cursor(const basic_cursor<basic_gbuffer, char8_t>& other)
+			: gbuf(other.gbuf), gap_rel_pos(other.gap_rel_pos)
 		{
 		}
 
@@ -84,7 +93,7 @@ private:
 	}
 
 public:
-	gbuffer() = default;
+	constexpr gbuffer() noexcept = default;
 	gbuffer(const gbuffer&) = default;
 	gbuffer(gbuffer&&) = default;
 
@@ -106,11 +115,11 @@ public:
 	}
 
 	void insert(std::u8string_view sv);
-	iterator insert(iterator iter, char8_t c);
-	void erase_back(std::size_t n);
-	void erase_forward(std::size_t n);
-	void erase(iterator from, iterator to);
-	void place_gap(iterator pos);
+	iterator insert(const_iterator iter, char8_t c);
+	iterator erase_back(std::size_t n);
+	iterator erase_forward(std::size_t n);
+	iterator erase(const_iterator from, const_iterator to);
+	void place_gap(const_iterator pos);
 	iterator gap()
 	{
 		return iter_at(0);
@@ -118,6 +127,10 @@ public:
 	const_iterator gap() const
 	{
 		return iter_at(0);
+	}
+	const_iterator cgap() const
+	{
+		return gap();
 	}
 
 	iterator begin()

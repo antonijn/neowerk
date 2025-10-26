@@ -44,7 +44,7 @@ void gbuffer::insert(std::u8string_view sv)
 	gap_begin += sv.size();
 }
 
-gbuffer::iterator gbuffer::insert(iterator iter, char8_t c)
+gbuffer::iterator gbuffer::insert(const_iterator iter, char8_t c)
 {
 	place_gap(iter);
 	accommodate(1);
@@ -52,25 +52,27 @@ gbuffer::iterator gbuffer::insert(iterator iter, char8_t c)
 	return iter_at(-1);
 }
 
-void gbuffer::erase_back(std::size_t n)
+gbuffer::iterator gbuffer::erase_back(std::size_t n)
 {
 	n = std::min(n, gap_begin);
 	gap_begin -= n;
 	const auto it = writable_gap().begin();
 	std::fill(it, it + n, 0);
+	return gap();
 }
 
-void gbuffer::erase_forward(std::size_t n)
+gbuffer::iterator gbuffer::erase_forward(std::size_t n)
 {
 	n = std::min(n, buf.size() - gap_end);
 	gap_end += n;
 	const auto it = writable_gap().end();
 	std::fill(it - n, it, 0);
+	return gap();
 }
 
-void gbuffer::erase(iterator from, iterator to)
+gbuffer::iterator gbuffer::erase(const_iterator from, const_iterator to)
 {
-	auto g = gap();
+	auto g = cgap();
 	if (from <= g && g <= to) {
 		auto back = g - from;
 		auto fwd = to - g;
@@ -87,11 +89,12 @@ void gbuffer::erase(iterator from, iterator to)
 			erase_back(n);
 		}
 	}
+	return gap();
 }
 
-void gbuffer::place_gap(iterator pos)
+void gbuffer::place_gap(const_iterator pos)
 {
-	auto adv = pos - gap();
+	auto adv = pos - cgap();
 	if (adv == 0)
 		return;
 
