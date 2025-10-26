@@ -17,7 +17,6 @@
 #include "gbuffer.hpp"
 
 #include <algorithm>
-#include <bits/ranges_util.h>
 #include <functional>
 
 #include <gtest/gtest.h>
@@ -122,6 +121,16 @@ TEST(GBufferTest, Mutable) {
 	gbuf.insert(u8"uppercase"sv);
 	std::ranges::for_each(gbuf, [](auto& x){ x = std::toupper(x); });
 	EXPECT_TRUE(std::ranges::equal(gbuf, u8"UPPERCASE"sv));
+}
+
+TEST(GBufferTest, InsertIter) {
+	auto gbuf = gbuffer{};
+	gbuf.insert(u8"held!"sv);
+
+	auto ins = std::inserter(gbuf, gbuf.begin() + 2);
+	std::ranges::copy(u8"llo, wor"sv, ins);
+
+	EXPECT_TRUE(std::ranges::equal(gbuf, u8"hello, world!"sv));
 }
 
 }

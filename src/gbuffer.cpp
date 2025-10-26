@@ -39,10 +39,17 @@ std::span<char8_t> gbuffer::writable_gap()
 
 void gbuffer::insert(std::u8string_view sv)
 {
-	auto rem_cap = gap_end - gap_begin;
 	accommodate(sv.size());
 	std::ranges::copy(sv, writable_gap().begin());
 	gap_begin += sv.size();
+}
+
+gbuffer::iterator gbuffer::insert(iterator iter, char8_t c)
+{
+	place_gap(iter);
+	accommodate(1);
+	buf[gap_begin++] = c;
+	return iter_at(-1);
 }
 
 void gbuffer::erase_back(std::size_t n)

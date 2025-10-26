@@ -65,6 +65,8 @@ public:
 	using const_cursor = basic_cursor<const gbuffer, const char8_t>;
 	using const_iterator = ranges::basic_iterator<const_cursor>;
 
+	using value_type = char8_t;
+
 private:
 	std::vector<char8_t> buf{};
 	std::size_t gap_begin{0}, gap_end{0};
@@ -104,6 +106,7 @@ public:
 	}
 
 	void insert(std::u8string_view sv);
+	iterator insert(iterator iter, char8_t c);
 	void erase_back(std::size_t n);
 	void erase_forward(std::size_t n);
 	void erase(iterator from, iterator to);
