@@ -25,7 +25,7 @@ FetchContent_MakeAvailable(googletest range-v3)
 
 add_executable(werk src/gbuffer.cpp src/main.cpp)
 
-target_link_libraries(werk range-v3)
+target_link_libraries(werk range-v3 tree-sitter)
 
 
 enable_testing()

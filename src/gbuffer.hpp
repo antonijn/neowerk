@@ -94,6 +94,11 @@ private:
 
 public:
 	constexpr gbuffer() noexcept = default;
+	template<typename InputIt>
+	gbuffer(InputIt first, InputIt last)
+	{
+		std::copy(first, last, std::inserter(*this, gap()));
+	}
 	gbuffer(const gbuffer&) = default;
 	gbuffer(gbuffer&&) = default;
 
